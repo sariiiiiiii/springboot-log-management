@@ -1,0 +1,10 @@
+### create shorten url
+POST localhost:8080/shortenUrl
+Content-Type: application/json
+
+{
+  "originalUrl": "https://www.inflearn.com/"
+}
+
+### select shorten url
+GET localhost:8080/urhUaq2U
