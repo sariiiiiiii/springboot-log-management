@@ -1,7 +1,10 @@
 package kr.co.shortenurlservice.domain;
 
+import lombok.ToString;
+
 import java.util.Random;
 
+@ToString
 public class ShortenUrl {
     private String originalUrl;
     private String shortenUrlKey;

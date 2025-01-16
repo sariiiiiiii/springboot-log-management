@@ -33,33 +33,30 @@ public class SimpleShortenUrlService {
         shortenUrlRepository.saveShortenUrl(shortenUrl);
         log.info("shortenUrl 생성: {}", shortenUrl);
 
-        ShortenUrlCreateResponseDto shortenUrlCreateResponseDto = new ShortenUrlCreateResponseDto(shortenUrl);
-        return shortenUrlCreateResponseDto;
+        return new ShortenUrlCreateResponseDto(shortenUrl);
     }
 
     public String getOriginalUrlByShortenUrlKey(String shortenUrlKey) {
         ShortenUrl shortenUrl = shortenUrlRepository.findShortenUrlByShortenUrlKey(shortenUrlKey);
 
-        if(null == shortenUrl)
+        if (null == shortenUrl) {
             throw new NotFoundShortenUrlException("단축 URL을 생성하지 못했습니다. shortenUrlKey = " + shortenUrlKey);
+        }
 
         shortenUrl.increaseRedirectCount();
         shortenUrlRepository.saveShortenUrl(shortenUrl);
 
-        String originalUrl = shortenUrl.getOriginalUrl();
-
-        return originalUrl;
+        return shortenUrl.getOriginalUrl();
     }
 
     public ShortenUrlInformationDto getShortenUrlInformationByShortenUrlKey(String shortenUrlKey) {
         ShortenUrl shortenUrl = shortenUrlRepository.findShortenUrlByShortenUrlKey(shortenUrlKey);
 
-        if(null == shortenUrl)
+        if (null == shortenUrl) {
             throw new NotFoundShortenUrlException("단축 URL을 생성하지 못했습니다. shortenUrlKey = " + shortenUrlKey);
+        }
 
-        ShortenUrlInformationDto shortenUrlInformationDto = new ShortenUrlInformationDto(shortenUrl);
-
-        return shortenUrlInformationDto;
+        return new ShortenUrlInformationDto(shortenUrl);
     }
 
     public List<ShortenUrlInformationDto> getAllShortenUrlInformationDto() {
@@ -67,7 +64,7 @@ public class SimpleShortenUrlService {
 
         return shortenUrls
                 .stream()
-                .map(shortenUrl -> new ShortenUrlInformationDto(shortenUrl))
+                .map(ShortenUrlInformationDto::new)
                 .toList();
     }
 
@@ -79,8 +76,12 @@ public class SimpleShortenUrlService {
             String shortenUrlKey = ShortenUrl.generateShortenUrlKey();
             ShortenUrl shortenUrl = shortenUrlRepository.findShortenUrlByShortenUrlKey(shortenUrlKey);
 
-            if(null == shortenUrl)
+            if (null == shortenUrl) {
                 return shortenUrlKey;
+            }
+
+            // 재시도를 하게 되는 곳
+            log.warn("단축 URL 생성 재시도! 재시도 횟수 : {}", count + 1);
         }
 
         throw new LackOfShortenUrlKeyException();
