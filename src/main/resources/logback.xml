@@ -1,8 +1,18 @@
 <configuration>
+    <!-- property 는 파일 내에서 사용할 변수를 지정해주는 것 LOG_FILE 은 변수명 application.log 는 값 -->
     <property name="LOG_FILE" value="application.log"/>
 
+    <!-- Logstash 로 전송할 Appender -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>localhost:5044</destination> <!-- 실제 logstash IP 주소를 사용해야 함 지금은 실습이라 localhost:5044 -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+        <!-- Elasticsearch Multi-head 의 Browser 의 Result Source 를 보면 json 형태의 값들을 볼 수 있는데 이 작업은 <encoder class="net.logstash.logback.encoder.LogstashEncoder" /> 가 해주고 있다 -->
+    </appender>
+
+    <!-- appender 태그는 로그가 콘솔로 나갈지 파일로 나갈지에 대한 정의를 appender 하나하나의 설정에서 제어 -->
     <!-- 콘솔 출력 -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoder 태그는 로그가 출력이 될 때의 포맷을 정의 -->
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{36} - %msg%n</pattern>
         </encoder>
@@ -10,8 +20,13 @@
 
     <!-- 파일 출력 -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_FILE}</file>
+        <file>${LOG_FILE}</file> <!-- 위에서 사용한 LOG_FILE 즉, application.log 로 생성한다는 것 -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollingPolicy 는 어느정도의 주기를 가지고 새로운 파일을 생성할 것인지 rolling 을 한다고 표현 -->
+            <!-- 예를 들어서 application.%d{yyyy-MM-dd_HH-mm}.log 이런 패턴이면 분단위로 롤링이 된다 이 패턴일 때 maxHistory가 5이면 5분단위 까지 기록 -->
+            <!-- 예를 들어서 application.%d{yyyy-MM-dd}.log 이런 패턴이면 일단위로 롤링이 되는것을 의미 이 패턴일 떄 maxHistory가 30 이면 30일 단위까지 기록 -->
+            <!-- fileNamePattern 확장자에 .gz 를 추가하게 되면 파일을 압축해준다 -->
+<!--            <fileNamePattern>application.%d{yyyy-MM-dd_HH-mm}.log.gz</fileNamePattern>-->
             <fileNamePattern>application.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
@@ -20,9 +35,13 @@
         </encoder>
     </appender>
 
+    <!-- 위에서 정의된 appender 가 어떤 level 를 저장할 지 설정 -->
+    <!-- application.properties 에서 logging.level.kr.co.shortenurlservice=trace 이 설정을 했다면 해당 패키지에 대해서는 trace 가 남고 나머지 패키지는 info 레벨로 적용 -->
+    <!-- application.properties 에서 아무런 설정을 하지 않았다면 root 태그에 설정이 되어 있는 info 레벨로 적용 -->
     <!-- Logger 설정 -->
     <root level="info">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
+        <appender-ref ref="LOGSTASH" />
     </root>
 </configuration>
